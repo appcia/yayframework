@@ -103,17 +103,20 @@ abstract class Application extends yComponent
 	}
 
 	/**
-	 * Gets an iDatabaseConnection instance.
+	 * Gets an iDatabaseConnection instance. If $connectionName is null, gets the DatabaseManager instance.
 	 *
 	 * @param string|null $connectionName
-	 * @return \Yay\Core\Database\Connection\iDatabaseConnection
+	 * @return \Yay\Core\Database\Connection\iDatabaseConnection|\Yay\Core\Database\DatabaseManager
 	 * @throws \RuntimeException
 	 */
 	public static function database($connectionName = null)
 	{
 		try
 		{
-			return self::instance()->component('database')->get($connectionName);
+			if ($connectionName)
+				return self::instance()->component('database')->get($connectionName);
+
+			return self::instance()->component('database');
 		}
 		catch (Exception\ComponentNotFoundException $e)
 		{
