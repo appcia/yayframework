@@ -5,6 +5,13 @@ namespace Yay\Core\Session\Storage;
 interface iSessionStorage
 {
 	/**
+	 * Gets the current session id.
+	 *
+	 * @return string
+	 */
+	function sessionId();
+
+	/**
 	 * Sets an item in session storage.
 	 *
 	 * @param $name

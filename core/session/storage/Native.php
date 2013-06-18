@@ -21,6 +21,16 @@ class Native extends yComponent implements iSessionStorage
 	}
 
 	/**
+	 * Gets the current session id.
+	 *
+	 * @return string
+	 */
+	public function sessionId()
+	{
+		return session_id();
+	}
+
+	/**
 	 * Sets an item in session storage.
 	 *
 	 * @param $name
