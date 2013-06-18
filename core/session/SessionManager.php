@@ -15,9 +15,9 @@ class SessionManager extends yComponent
 	/**
 	 * Construct.
 	 *
-	 * @param iSessionStorage $storage
+	 * @param Storage\iSessionStorage $storage
 	 */
-	public function __construct(iSessionStorage $storage)
+	public function __construct(Storage\iSessionStorage $storage)
 	{
 		$this->registerComponent('storage', $storage);
 	}
@@ -77,9 +77,9 @@ class SessionManager extends yComponent
 	/**
 	 * Gets the storage instance.
 	 *
-	 * @return iSessionStorage
+	 * @return Storage\iSessionStorage
 	 */
-	protected function storage()
+	public function storage()
 	{
 		return $this->component('storage');
 	}

@@ -1,6 +1,6 @@
 <?php
 
-namespace Yay\Core\Session;
+namespace Yay\Core\Session\Storage;
 
 interface iSessionStorage
 {
@@ -16,9 +16,10 @@ interface iSessionStorage
 	 * Gets an item from session storage.
 	 *
 	 * @param string $name
+	 * @param mixed $default default value
 	 * @return mixed
 	 */
-	function get($name);
+	function get($name, $default = null);
 
 	/**
 	 * Removes an item from session storage.

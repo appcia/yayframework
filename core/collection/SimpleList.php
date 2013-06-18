@@ -42,6 +42,16 @@ class SimpleList extends yComponent implements \IteratorAggregate, \Countable, \
 	}
 
 	/**
+	 * Gets the data as a json string.
+	 *
+	 * @return string
+	 */
+	public function __toString()
+	{
+		return json_encode($this->toArray());
+	}
+
+	/**
 	 * Adds an item into the list.
 	 *
 	 * @param mixed $item

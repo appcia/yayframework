@@ -24,7 +24,7 @@ class Cookie extends yComponent
 	 * @param bool $secure should transfer only through https connection?
 	 * @return bool
 	 */
-	public static function set($name, $value, $expiration = null, $path = '/',
+	public function set($name, $value, $expiration = null, $path = '/',
 							   $domain = null, $httpOnly = false, $secure = false)
 	{
 		$path = !$path ? '/' : $path;
@@ -33,12 +33,28 @@ class Cookie extends yComponent
 	}
 
 	/**
+	 * Sets a cookie for ~2 years.
+	 *
+	 * @param string $name cookie name
+	 * @param string $value cookie value
+	 * @param string $path cookie path (if null, its '/')
+	 * @param string $domain cookie domain
+	 * @param bool $httpOnly if true, javascript can't see the cookie
+	 * @param bool $secure should transfer only through https connection?
+	 * @return bool
+	 */
+	public function forever($name, $value, $path = '/', $domain = null, $httpOnly = false, $secure = false)
+	{
+		return $this->set($name, $value, time() + 63072000, $path, $domain, $httpOnly, $secure);
+	}
+
+	/**
 	 * Gets a cookie. If doesn't exist, return null.
 	 *
 	 * @param string $name cookie name
 	 * @return null|mixed
 	 */
-	public static function get($name)
+	public function get($name)
 	{
 		if (isset($_COOKIE[$name]))
 			return $_COOKIE[$name];
@@ -54,7 +70,7 @@ class Cookie extends yComponent
 	 * @param null|string $domain
 	 * @return bool
 	 */
-	public static function delete($name, $path = null, $domain = null)
+	public function delete($name, $path = null, $domain = null)
 	{
 		return setcookie($name, '', 1, $path, $domain);
 	}
@@ -62,11 +78,10 @@ class Cookie extends yComponent
 	/**
 	 * Tells whether the cookie exists or not.
 	 *
-	 * @static
 	 * @param string $name cookie name
 	 * @return bool
 	 */
-	public static function exists($name)
+	public function exists($name)
 	{
 		return isset($_COOKIE[$name]) || array_key_exists($name, $_COOKIE);
 	}

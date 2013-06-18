@@ -27,8 +27,12 @@ $app->config = new \Yay\Core\Config\Config($app->fileSystem);
 $app->config->getFilesInDirectory('../app/config');
 // session config
 $app->session = new \Yay\Core\Session\SessionManager(new \Yay\Core\Session\Storage\Native());
+// request init
+$app->request = new \Yay\Core\Request\Request();
+// input init
+$app->input = new \Yay\Core\Request\Input($app->session->storage(), $app->fileSystem);
 // router init
-$app->router = new \Yay\Core\Routing\Router(new \Yay\Core\Request\Request());
+$app->router = new \Yay\Core\Routing\Router($app->request);
 $app->router->addRoutes($app->config->routes->toArray());
 // cache connections
 $app->cache = new \Yay\Core\Cache\CacheManager();
@@ -44,3 +48,5 @@ $app->database->addConnections(
 		$app->config->databases->toArray()
 	)
 );
+
+echo $app->request->host();

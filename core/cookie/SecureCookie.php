@@ -12,16 +12,16 @@ class SecureCookie extends Cookie
 	/**
 	 * @var string HMAC secret key
 	 */
-	private static $_secretKey;
+	private $_secretKey;
 
 	/**
 	 * Sets the HMAC secret key.
 	 *
 	 * @param string $key
 	 */
-	public static function setSecretKey($key)
+	public function setSecretKey($key)
 	{
-		self::$_secretKey = $key;
+		$this->_secretKey = $key;
 	}
 
 	/**
@@ -36,12 +36,37 @@ class SecureCookie extends Cookie
 	 * @param bool $secure should transfer only through https connection?
 	 * @return bool
 	 */
-	public static function set($name, $value, $expiration = null, $path = '/',
+	public function set($name, $value, $expiration = null, $path = '/',
 							   $domain = null, $httpOnly = false, $secure = false)
 	{
 		parent::set(
 			$name,
-			$value . '|' . $expiration . '|' . self::generateHMAC($value, $expiration),
+			$value . '|' . $expiration . '|' . $this->generateHMAC($value, $expiration),
+			$expiration,
+			$path,
+			$domain,
+			true
+		);
+	}
+
+	/**
+	 * Sets a secure cookie for ~2 years.
+	 *
+	 * @param string $name cookie name
+	 * @param string $value cookie value
+	 * @param string $path cookie path (if null, its '/')
+	 * @param string $domain cookie domain
+	 * @param bool $httpOnly if true, javascript can't see the cookie
+	 * @param bool $secure should transfer only through https connection?
+	 * @return bool
+	 */
+	public function forever($name, $value, $path = '/',
+							   $domain = null, $httpOnly = false, $secure = false)
+	{
+		$expiration = time() + 63072000;
+		parent::set(
+			$name,
+			$value . '|' . $expiration . '|' . $this->generateHMAC($value, $expiration),
 			$expiration,
 			$path,
 			$domain,
@@ -55,9 +80,9 @@ class SecureCookie extends Cookie
 	 * @param string $name cookie name
 	 * @return null|mixed
 	 */
-	public static function get($name)
+	public function get($name)
 	{
-		if (!self::exists($name) || is_null(parent::get($name)) || !self::verify(parent::get($name)))
+		if (!$this->exists($name) || is_null(parent::get($name)) || !$this->verify(parent::get($name)))
 			return null;
 
 		$data = explode('|', parent::get($name));
@@ -70,13 +95,13 @@ class SecureCookie extends Cookie
 	 * @param string $cookieData cookie data
 	 * @return bool
 	 */
-	public static function verify($cookieData)
+	public function verify($cookieData)
 	{
 		list($data, $expiration, $hmac) = explode('|', $cookieData);
 		if ($expiration != 0 && $expiration < time())
 			return false;
 
-		$hash = self::generateHMAC($data, $expiration);
+		$hash = $this->generateHMAC($data, $expiration);
 		return $hmac == $hash;
 	}
 
@@ -87,9 +112,9 @@ class SecureCookie extends Cookie
 	 * @param string $expiration cookie expiration
 	 * @return string
 	 */
-	private static function generateHMAC($data, $expiration)
+	private function generateHMAC($data, $expiration)
 	{
-		$key = hash_hmac('md5', $data . $expiration, self::$_secretKey);
+		$key = hash_hmac('md5', $data . $expiration, $this->_secretKey);
 		$hash = hash_hmac('md5', $data . $expiration, $key);
 
 		return $hash;

@@ -29,7 +29,7 @@ class File extends yComponent
 	/**
 	 * Gets the FileSystem instance.
 	 *
-	 * @return mixed
+	 * @return iFileSystem
 	 */
 	private function fileSystem()
 	{

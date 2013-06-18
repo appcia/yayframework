@@ -30,25 +30,332 @@ class Request extends yComponent
 	 * @var string
 	 */
 	private $_httpMethodString;
+	/**
+	 * @var array
+	 */
+	private $_headers;
+	/**
+	 * @var string request content
+	 */
+	private $_content;
 
 	/**
-	 * Gets the request uri.
+	 * Construct. It prepares headers.
+	 */
+	public function __construct()
+	{
+		$this->_headers = function_exists('getallheaders') ? getallheaders() : array();
+		if (!count($this->_headers))
+		{
+			foreach($_SERVER as $key => $value)
+			{
+				if (strpos($key, 'HTTP_') === 0)
+					$this->_headers[str_replace(' ', '-', ucwords(str_replace('_', ' ', strtolower(substr($key, 5)))))] = $value;
+			}
+		}
+	}
+
+	/**
+	 * Gets the query string of the request.
+	 *
+	 * @return string
+	 */
+	public function queryString()
+	{
+		return substr($this->fullUri(), strpos($this->fullUri(), '?'), strlen($this->fullUri()) - 1);
+	}
+
+	/**
+	 * Gets the http authenticated user name.
+	 *
+	 * @return string|null
+	 */
+	public function httpUser()
+	{
+		return $this->server('PHP_AUTH_USER');
+	}
+
+	/**
+	 * Gets the http authenticated user password.
+	 *
+	 * @return string|null
+	 */
+	public function httpPassword()
+	{
+		return $this->server('PHP_AUTH_PW');
+	}
+
+	/**
+	 * Gets the port on which the request was made.
+	 *
+	 * @return int
+	 */
+	public function port()
+	{
+		return $this->header('X-Forwarded-Port') ? (int)$this->header('X-Forwarded-Port') : (int)$this->server('SERVER_PORT');
+	}
+
+	/**
+	 * Gets the request as a string.
+	 *
+	 * @return string
+	 */
+	public function __toString()
+	{
+		return $this->requestAsString();
+	}
+
+	/**
+	 * Gets the request as a string.
+	 *
+	 * @return string
+	 */
+	public function requestAsString()
+	{
+		$headers = '';
+		foreach ($this->headers() as $name => $value)
+			$headers .= $name . ': ' . $value . "\r\n";
+
+		return sprintf('%s %s %s', strtoupper($this->httpMethodString()), $this->uri(), $this->server('SERVER_PROTOCOL'))."\r\n".
+				$headers."\r\n".
+				$this->content();
+	}
+
+	/**
+	 * Gets the client's ip.
+	 *
+	 * @return string
+	 * @throws \Yay\Core\Exception\RequestException
+	 */
+	public function clientIp()
+	{
+		$keys = array(
+			'HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_X_CLUSTER_CLIENT_IP',
+			'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR'
+		);
+		$keys = array_values(array_intersect($keys, array_keys($_SERVER)));
+		foreach ($keys as $key)
+		{
+			foreach (explode(',', $this->server($key)) as $ip)
+			{
+				$ip = trim($ip);
+				if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE) !== false)
+					return $ip;
+			}
+		}
+
+		throw new Exception\RequestException("Can't get client ip.");
+	}
+
+	/**
+	 * Gets an item from the $_SERVER variable.
+	 *
+	 * @param string $name
+	 * @return null|mixed
+	 */
+	public function server($name)
+	{
+		return isset($_SERVER[$name]) ? $_SERVER[$name] : null;
+	}
+
+	/**
+	 * Gets a request header. Example: $input->get('Accept-Encoding'), $input-get('Cache-Control')
+	 *
+	 * @param string $name
+	 * @return null|string
+	 */
+	public function header($name)
+	{
+		return isset($this->_headers[$name]) ? $this->_headers[$name] : null;
+	}
+
+	/**
+	 * Gets all request headers.
+	 *
+	 * @return array
+	 */
+	public function headers()
+	{
+		return $this->_headers;
+	}
+
+	/**
+	 * Gets the request content.
+	 *
+	 * @return string
+	 */
+	public function content()
+	{
+		if ($this->_content === null)
+			$this->_content = file_get_contents('php://input');
+
+		return $this->_content;
+	}
+
+	/**
+	 * Returns whether a request is an ajax request.
+	 *
+	 * @return bool
+	 */
+	public function isAjax()
+	{
+		return $this->header('X-Requested-With') == 'XMLHttpRequest';
+	}
+
+	/**
+	 * Returns whether a request is a POST request.
+	 *
+	 * @return bool
+	 */
+	public function isPost()
+	{
+		return $this->httpMethod() == self::MethodPost;
+	}
+
+	/**
+	 * Returns whether a request is a GET request.
+	 *
+	 * @return bool
+	 */
+	public function isGet()
+	{
+		return $this->httpMethod() == self::MethodGet;
+	}
+
+	/**
+	 * Returns whether a request is a PUT request.
+	 *
+	 * @return bool
+	 */
+	public function isPut()
+	{
+		return $this->httpMethod() == self::MethodPut;
+	}
+
+	/**
+	 * Returns whether a request is a DELETE request.
+	 *
+	 * @return bool
+	 */
+	public function isDelete()
+	{
+		return $this->httpMethod() == self::MethodDelete;
+	}
+
+	/**
+	 * Returns whether a request is a CONNECT request.
+	 *
+	 * @return bool
+	 */
+	public function isConnect()
+	{
+		return $this->httpMethod() == self::MethodConnect;
+	}
+
+	/**
+	 * Returns whether a request is a TRACE request.
+	 *
+	 * @return bool
+	 */
+	public function isTrace()
+	{
+		return $this->httpMethod() == self::MethodTrace;
+	}
+
+	/**
+	 * Returns whether a request is an OPTIONS request.
+	 *
+	 * @return bool
+	 */
+	public function isOptions()
+	{
+		return $this->httpMethod() == self::MethodOptions;
+	}
+
+	/**
+	 * Returns whether a request is a HEAD request.
+	 *
+	 * @return bool
+	 */
+	public function isHead()
+	{
+		return $this->httpMethod() == self::MethodHead;
+	}
+
+	/**
+	 * Gets the request uri without query string, example: if url is domain.com/home?a=1&b=2, returns /home.
 	 *
 	 * @return string
 	 */
 	public function uri()
 	{
+		$uri = $this->fullUri();
+		$queryPos = strpos($uri, '?');
+		return substr($uri, 0, strpos($uri, '?') ? $queryPos : null);
+	}
+
+	/**
+	 * Gets the request uri with query string, example: if url is domain.com/home?a=1&b=2, returns /home?a=1&b=2.
+	 *
+	 * @return string
+	 */
+	public function fullUri()
+	{
 		return $_SERVER['REQUEST_URI'] ? $_SERVER['REQUEST_URI'] : '/';
 	}
 
 	/**
-	 * Gets the domain name.
+	 * Gets an uri segment with the specified index.
+	 *
+	 * @param int $index
+	 * @return null|string
+	 */
+	public function uriSegment($index)
+	{
+		$uriParts = explode('/', $this->uri());
+		return isset($uriParts[$index]) ? $uriParts[$index] : null;
+	}
+
+	/**
+	 * Gets the current url.
+	 *
+	 * @return string
+	 */
+	public function url()
+	{
+		return ($this->secure() ? 'https' : 'http') . '//' . $this->domainName() . $this->uri();
+	}
+
+	/**
+	 * Returns whether the request uses SSL connection. (https)
+	 *
+	 * @return bool
+	 */
+	public function secure()
+	{
+		return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off')
+			|| isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && ($_SERVER['HTTP_X_FORWARDED_PROTO']
+				&& $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https');
+	}
+
+	/**
+	 * Gets the requested domain name.
 	 *
 	 * @return string
 	 */
 	public function domainName()
 	{
 		return isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $_SERVER['SERVER_NAME'];
+	}
+
+	/**
+	 * Gets the requested host name.
+	 *
+	 * @return mixed
+	 */
+	public function host()
+	{
+		return isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : $_SERVER['SERVER_ADDR'];
 	}
 
 	/**

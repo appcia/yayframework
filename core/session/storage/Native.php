@@ -2,7 +2,6 @@
 
 namespace Yay\Core\Session\Storage;
 
-use Yay\Core\Session\iSessionStorage;
 use Yay\Core\yComponent;
 
 /**
@@ -36,11 +35,12 @@ class Native extends yComponent implements iSessionStorage
 	 * Gets an item from session storage.
 	 *
 	 * @param string $name
+	 * @param mixed $default default value
 	 * @return mixed|null
 	 */
-	public function get($name)
+	public function get($name, $default = null)
 	{
-		return isset($_SESSION[$name]) ? $_SESSION[$name] : null;
+		return isset($_SESSION[$name]) ? $_SESSION[$name] : $default;
 	}
 
 	/**

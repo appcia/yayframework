@@ -38,6 +38,16 @@ class Map extends yComponent implements \IteratorAggregate, \Countable, \ArrayAc
 	}
 
 	/**
+	 * Gets the data as a json string.
+	 *
+	 * @return string
+	 */
+	public function __toString()
+	{
+		return json_encode($this->toArray());
+	}
+
+	/**
 	 * Adds an item into the map. If the item already exists, it'll be overwritten.
 	 *
 	 * @param mixed $key
