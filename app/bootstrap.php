@@ -25,6 +25,13 @@ $app->fileSystem = new \Yay\Core\FileSystem\FileSystem();
 // setting up config
 $app->config = new \Yay\Core\Config\Config($app->fileSystem);
 $app->config->getFilesInDirectory('../app/config');
+// adding external classes to autoloader
+$autoloader->addExternalClasses(
+	$app->config->externalclasses->get('classes')
+);
+$autoloader->addExternalResolvers(
+	$app->config->externalclasses->get('resolvers')
+);
 // session config
 $app->session = new \Yay\Core\Session\SessionManager(new \Yay\Core\Session\Storage\Native());
 // request init
@@ -48,5 +55,3 @@ $app->database->addConnections(
 		$app->config->databases->toArray()
 	)
 );
-
-echo $app->request->host();

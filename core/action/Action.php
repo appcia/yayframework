@@ -2,6 +2,7 @@
 
 namespace Yay\Core\Action;
 
+use Yay\Core\View\View;
 use Yay\Core\yComponent;
 
 /**
@@ -13,20 +14,36 @@ use Yay\Core\yComponent;
 abstract class Action extends yComponent
 {
 	private $_params = array();
+	private $_view;
 
 	public function __construct(array $params)
 	{
 		$this->_params = $params;
 	}
 
-	private function get($name)
+	public function get($name)
 	{
 		return isset($this->_params[$name]) ? $this->_params[$name] : null;
 	}
 
-	private function set($name, $value)
+	public function set($name, $value)
 	{
 		$this->_params[$name] = $value;
+	}
+
+	public function setView(View $view)
+	{
+		$this->_view = $view;
+	}
+
+	/**
+	 * Gets the view instance.
+	 *
+	 * @return View
+	 */
+	public function view()
+	{
+		return $this->_view;
 	}
 
 	abstract public function execute();

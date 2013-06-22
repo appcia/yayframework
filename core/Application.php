@@ -3,6 +3,7 @@
 namespace Yay\Core;
 
 use \Yay\Core\Exception;
+use Yay\Core\Response\Response;
 
 /**
  * Base class for your application.

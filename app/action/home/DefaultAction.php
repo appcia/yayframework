@@ -9,6 +9,7 @@ final class DefaultAction extends Action
 {
 	public function execute()
 	{
-		echo 'HOME ACTION!';
+		$this->view()->template()->setTemplatePath('home/default/default.twig');
+		$this->view()->execute();
 	}
 }

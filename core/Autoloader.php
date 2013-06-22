@@ -19,6 +19,10 @@ class Autoloader extends yComponent
 	 */
 	private $_externalClasses = array();
 	/**
+	 * @var array External class resolver callable functions
+	 */
+	private $_externalResolvers = array();
+	/**
 	 * @var string Root directory, where autoloader can find files
 	 */
 	private $_rootDirectory = '';
@@ -39,7 +43,7 @@ class Autoloader extends yComponent
 	 * @param $externalClasses
 	 * @throws Exception\ArgumentMismatchException
 	 */
-	public function addExternalClasses($externalClasses)
+	public function addExternalClasses(array $externalClasses)
 	{
 		if (!is_array($externalClasses))
 			throw new Exception\ArgumentMismatchException("Couldn't add external classes, argument isn't an array");
@@ -56,6 +60,31 @@ class Autoloader extends yComponent
 	public function addExternalClass($className, $filePath)
 	{
 		$this->_externalClasses[$className] = $filePath;
+	}
+
+	/**
+	 * Adds an external class resolver.
+	 *
+	 * @param int $stringStart
+	 * @param callable $callable
+	 */
+	public function addExternalResolver($stringStart, $callable)
+	{
+		$this->_externalResolvers[$stringStart] = $callable;
+	}
+
+	/**
+	 * Adds external class resolvers. Expects an array in format array('className' => callable, ...)
+	 *
+	 * @param $resolvers
+	 * @throws Exception\ArgumentMismatchException
+	 */
+	public function addExternalResolvers(array $resolvers)
+	{
+		if (!is_array($resolvers))
+			throw new Exception\ArgumentMismatchException("Couldn't add external resolvers, argument isn't an array");
+
+		$this->_externalResolvers = array_merge($this->_externalResolvers, $resolvers);
 	}
 
 	/**
@@ -107,9 +136,20 @@ class Autoloader extends yComponent
 	 */
 	protected function getExternalFileName($className)
 	{
-		return isset($this->_externalClasses[$className])
-			? 'external/' . $this->_externalClasses[$className]
-			: null;
+		if (isset($this->_externalClasses[$className]))
+			return $this->_externalClasses[$className];
+
+		foreach ($this->_externalResolvers as $startString => $callable)
+		{
+			if (strpos($className, $startString) === 0 && is_callable($callable))
+			{
+				$filePath = '/external/' . $callable($className);
+				if (file_exists($this->_rootDirectory . $filePath))
+					return $filePath;
+			}
+		}
+
+		return null;
 	}
 
 	/**
