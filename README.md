@@ -11,7 +11,7 @@ environment.__
 
 ## Requirements ##
 
-* PHP 5.4 (this may change, as I remember there is only 1 function call that requires 5.4 + reference passing)
+* PHP 5.4
 * Some of the database connection classes require PDO and PDO drivers
 * Rest coming soon
 
