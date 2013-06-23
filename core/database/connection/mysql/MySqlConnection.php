@@ -1,17 +1,17 @@
 <?php
 
-namespace Yay\Core\Database\Connection\SQLite3;
+namespace Yay\Core\Database\Connection\MySQL;
 
 use Yay\Core\Database\Connection\CacheableDatabaseConnection;
 use Yay\Core\Exception;
 
 /**
- * SQLite3 connection class. It uses PDO.
+ * MySQL connection class. It uses PDO.
  *
  * @author BlindingLight<bloodredshade@gmail.com>
- * @package Yay\Core\Database\Connection\SQLite3
+ * @package Yay\Core\Database\Connection\MySQL
  */
-class SQLite3Connection extends CacheableDatabaseConnection
+class MySqlConnection extends CacheableDatabaseConnection
 {
 	/**
 	 * @var \PDO
@@ -25,21 +25,34 @@ class SQLite3Connection extends CacheableDatabaseConnection
 	 * @var bool
 	 */
 	private $_isPersistent;
+	/**
+	 * @var string
+	 */
+	private $_user;
+	/**
+	 * @var string
+	 */
+	private $_password;
 
 	/**
 	 * Construct.
 	 *
 	 * @param string $name connection name
-	 * @param string $dsn SQLite file path or :memory: for in-memory database
+	 * @param string $host
+	 * @param int $port
+	 * @param string $user
+	 * @param string $password
+	 * @param string $database
 	 * @param bool $persistent persistent connection?
+	 * @param bool $lazyConnect connect automatically if the connection isn't alive when trying to query the database?
+	 * @param string $charset
 	 */
-	public function __construct($name, $dsn = ':memory:', $persistent = false)
+	public function __construct($name, $host, $port, $user, $password, $database, $persistent = false, $lazyConnect = true,
+								$charset = 'utf8')
 	{
-		// creating database file if not exists
-		if ($dsn != ':memory:' && !file_exists($dsn))
-			@touch($dsn);
-
-		$this->_connectionString = 'sqlite:' . $dsn;
+		$this->_connectionString = 'mysql:host=' . $host . ';dbname=' . $database . ';charset=utf8';
+		$this->_user = $user;
+		$this->_password = $password;
 		$this->_isPersistent = (bool)$persistent;
 		$this->setName($name);
 	}
@@ -55,8 +68,8 @@ class SQLite3Connection extends CacheableDatabaseConnection
 		{
 			$this->_pdo = new \PDO(
 				$this->_connectionString,
-				null,
-				null,
+				$this->_user,
+				$this->_password,
 				array(
 					\PDO::ATTR_PERSISTENT => $this->_isPersistent
 				)
@@ -272,7 +285,7 @@ class SQLite3Connection extends CacheableDatabaseConnection
 		if (!$savepoint)
 			$this->_pdo->rollBack();
 		else
-			$this->_pdo->query('ROLLBACK TRANSACTION TO SAVEPOINT ' . $savepoint);
+			$this->_pdo->query('ROLLBACK TO SAVEPOINT ' . $savepoint);
 	}
 
 	/**
@@ -290,11 +303,10 @@ class SQLite3Connection extends CacheableDatabaseConnection
 	}
 
 	/**
-	 * From SQLite docs:
-	 * The RELEASE command causes all savepoints back to and including the most recent savepoint with
-	 * a matching name to be removed from the transaction stack. The RELEASE of an inner transaction does
-	 * not cause any changes to be written to the database file; it merely removes savepoints from the
-	 * transaction stack such that it is no longer possible to ROLLBACK TO those savepoints.
+	 * From MySQL docs:
+	 * The RELEASE SAVEPOINT statement removes the named savepoint from the set of savepoints
+	 * of the current transaction. No commit or rollback occurs. It is an error if the savepoint
+	 * does not exist.
 	 *
 	 * @param string $savepoint
 	 * @throws \Yay\Core\Exception\DatabaseException
